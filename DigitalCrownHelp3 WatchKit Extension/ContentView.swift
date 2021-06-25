@@ -1,20 +1,14 @@
-//
-//  ContentView.swift
-//  DigitalCrownHelp3 WatchKit Extension
-//
-//  Created by Michael S. Muegel on 6/24/21.
-//
-
 import SwiftUI
 
 class GlobalState : ObservableObject {
-    @Published var forceFocus = false
+    @Published var enableCrown = false
 }
 
 struct ChildView: View {
     @State var crownValue = 0.0
     @ObservedObject var globalState = ContentView.globalState
     @Namespace private var namespace
+    @Environment(\.resetFocus) var resetFocus
     
     let label: String
 
@@ -25,11 +19,11 @@ struct ChildView: View {
     var body: some View {
         ScrollView {
             Text(label)
-            Button("\(globalState.forceFocus ? "Disable" : "Enable") Crown") {
-                globalState.forceFocus = !globalState.forceFocus
+            Button("\(globalState.enableCrown ? "Disable" : "Enable") Crown") {
+                globalState.enableCrown = !globalState.enableCrown
             }
             .focusable()
-            .prefersDefaultFocus(globalState.forceFocus, in: namespace)
+            .prefersDefaultFocus(globalState.enableCrown, in: namespace)
             .digitalCrownRotation($crownValue)
             .onChange(of: crownValue, perform: { value in
                 print("crownValue is \(crownValue)")
@@ -37,7 +31,8 @@ struct ChildView: View {
         }
         .focusScope(namespace)
         .onAppear {
-            print("\(label), forceFocus=\(globalState.forceFocus)")
+            print("\(label), enableCrown=\(globalState.enableCrown)")
+            resetFocus(in: namespace)
         }
     }
 }
