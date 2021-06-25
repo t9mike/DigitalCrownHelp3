@@ -25,8 +25,8 @@ struct ChildView: View {
     var body: some View {
         ScrollView {
             Text(label)
-            Button("Enable Crown") {
-                globalState.forceFocus = true
+            Button("\(globalState.forceFocus ? "Disable" : "Enable") Crown") {
+                globalState.forceFocus = !globalState.forceFocus
             }
             .focusable()
             .prefersDefaultFocus(globalState.forceFocus, in: namespace)
@@ -35,6 +35,7 @@ struct ChildView: View {
                 print("crownValue is \(crownValue)")
             })
         }
+        .focusScope(namespace)
         .onAppear {
             print("\(label), forceFocus=\(globalState.forceFocus)")
         }
