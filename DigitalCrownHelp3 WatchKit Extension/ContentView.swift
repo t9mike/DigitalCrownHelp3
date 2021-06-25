@@ -8,28 +8,31 @@
 import SwiftUI
 
 class GlobalState : ObservableObject {
-    @Published var forceFocus = false
+    @Published var enableCrown = false
 }
 
 struct ChildView: View {
     @State var crownValue = 0.0
     @ObservedObject var globalState = ContentView.globalState
-    @Namespace private var namespace
-    
-    let label: String
+    @Environment(\.resetFocus) var resetFocus
 
-    init(_ label: String) {
+    let label: String
+    let namespace: Namespace.ID
+    
+    init(_ label: String, ns: Namespace.ID) {
         self.label = label
+        self.namespace = ns
     }
     
     var body: some View {
         ScrollView {
             Text(label)
-            Button("\(globalState.forceFocus ? "Disable" : "Enable") Crown") {
-                globalState.forceFocus = !globalState.forceFocus
+            Button("\(globalState.enableCrown ? "Disable" : "Enable") Crown") {
+                globalState.enableCrown = !globalState.enableCrown
             }
             .focusable()
-            .prefersDefaultFocus(globalState.forceFocus, in: namespace)
+            .prefersDefaultFocus(true, in: namespace)
+//            .prefersDefaultFocus(globalState.enableCrown, in: namespace)
             .digitalCrownRotation($crownValue)
             .onChange(of: crownValue, perform: { value in
                 print("crownValue is \(crownValue)")
@@ -37,19 +40,34 @@ struct ChildView: View {
         }
         .focusScope(namespace)
         .onAppear {
-            print("\(label), forceFocus=\(globalState.forceFocus)")
+            print("\(label), enableCrown=\(globalState.enableCrown)")
+            resetFocus(in: namespace)
         }
     }
 }
 
 struct ContentView: View {
     static let globalState = GlobalState()
-    
+    @State private var tabSelection = 1
+    @Namespace private var namespace
+    @Environment(\.resetFocus) var resetFocus
+
     var body: some View {
-        TabView {
-            ChildView("Tab #1")
-            ChildView("Tab #2")
+        TabView(selection: $tabSelection) {
+            ChildView("Tab #1", ns: namespace)
+                .tag(1)
+            ChildView("Tab #2", ns: namespace)
+                .tag(2)
+            ChildView("Tab #3", ns: namespace)
+                .tag(3)
         }
+        .onChange(of: tabSelection, perform: { value in
+            print("tab is now \(tabSelection)")
+            resetFocus(in: namespace)
+//            if ContentView.globalState.enableCrown {
+//                resetFocus(in: namespace)
+//            }
+        })
     }
 }
 
