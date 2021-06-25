@@ -7,8 +7,15 @@
 
 import SwiftUI
 
+class GlobalState : ObservableObject {
+    @Published var forceFocus = false
+}
+
 struct ChildView: View {
     @State var crownValue = 0.0
+    @ObservedObject var globalState = ContentView.globalState
+    @Namespace private var namespace
+    
     let label: String
 
     init(_ label: String) {
@@ -19,21 +26,28 @@ struct ChildView: View {
         ScrollView {
             Text(label)
             Button("Enable Crown") {
+                globalState.forceFocus = true
             }
             .focusable()
+            .prefersDefaultFocus(globalState.forceFocus, in: namespace)
             .digitalCrownRotation($crownValue)
             .onChange(of: crownValue, perform: { value in
                 print("crownValue is \(crownValue)")
             })
         }
+        .onAppear {
+            print("\(label), forceFocus=\(globalState.forceFocus)")
+        }
     }
 }
 
 struct ContentView: View {
+    static let globalState = GlobalState()
+    
     var body: some View {
         TabView {
-            ChildView("hello")
-            ChildView("world")
+            ChildView("Tab #1")
+            ChildView("Tab #2")
         }
     }
 }
